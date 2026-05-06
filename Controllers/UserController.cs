@@ -83,27 +83,28 @@ namespace SaigonRide.Controllers
             if (history == null || history.Status != "In Progress")
                 return RedirectToAction("Index", "Home");
 
-            // Cập nhật kết thúc hành trình
             history.EndTime = DateTime.Now;
             history.Status = "Completed";
-
-            // Ghi nhận trạm trả (Mặc định là trạm xe đang đậu lúc trả)
             history.ReturnStationId = history.PickupStationId;
 
-            // Tính tiền theo block 30 phút
+            // --- LOGIC TÍNH TIỀN THEO ĐỀ BÀI ---
             TimeSpan duration = history.EndTime.Value - history.StartTime;
-            int blocks = (int)Math.Ceiling(duration.TotalMinutes / 30);
-            if (blocks < 1) blocks = 1;
-            history.TotalPrice = blocks * 10000;
+            double totalMinutes = Math.Max(1, duration.TotalMinutes); // Ít nhất tính 1 phút
 
-            if (history.Vehicle != null)
-            {
-                history.Vehicle.Status = "Available";
-            }
+            // 1. Xác định đơn giá dựa trên loại xe
+            decimal ratePerMinute = (history.Vehicle?.Type == "E-Scooter") ? 1500m : 500m;
+
+            // 2. Tính giá gốc
+            decimal basePrice = (decimal)totalMinutes * ratePerMinute;
+
+            // 3. Áp dụng giảm giá 15% (Location Discount)
+            decimal discount = basePrice * 0.15m;
+            history.TotalPrice = basePrice - discount;
+
+            if (history.Vehicle != null) history.Vehicle.Status = "Available";
 
             _context.SaveChanges();
-
-            return RedirectToAction("RentalHistory"); // Trả xong xem lịch sử luôn cho tiện
+            return RedirectToAction("RentalHistory");
         }
 
         // 5. Lịch sử các chặng đã đi

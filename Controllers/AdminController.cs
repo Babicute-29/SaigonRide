@@ -23,6 +23,18 @@ namespace SaigonRide.Controllers
         {
             var role = HttpContext.Session.GetString("Role");
             if (role != "Admin") return RedirectToAction("Login", "Auth");
+
+            // 1. Lấy thông tin Admin từ Session để hiển thị lời chào
+            // Giả sử Nhu đã lưu "Username" lúc Login, nếu chưa hãy thay bằng tên cố định hoặc lấy từ DB
+            ViewBag.AdminName = HttpContext.Session.GetString("Username") ?? "giaphuc";
+            ViewBag.AdminEmail = "admin@saigonride.com"; // Hoặc lấy từ Session nếu có
+
+            // 2. Đếm số liệu thực tế từ Database thông qua _context
+            ViewBag.TotalVehicles = _context.Vehicles.Count();
+            ViewBag.TotalUsers = _context.Users.Count(u => u.Role == "User");
+            ViewBag.TotalStations = _context.Stations.Count();
+            ViewBag.TotalRentals = _context.RentingHistories.Count();
+
             return View();
         }
 

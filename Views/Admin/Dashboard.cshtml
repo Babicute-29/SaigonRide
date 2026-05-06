@@ -1,42 +1,83 @@
 ﻿@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Admin Dashboard";
 }
 
-<h2>Admin Dashboard</h2>
-
-<div class="row mt-4">
-
-    <div class="col-md-3">
-        <div class="card text-white p-3 shadow"
-             style="background:linear-gradient(45deg,#2563eb,#1e3a8a);">
-            <h5>Total Vehicles</h5>
-            <h3>25</h3>
+<div class="container-fluid mt-4">
+    <!-- Admin Information Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm p-4" style="border-radius: 15px; background: #fff; border-left: 5px solid #ffc107;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
+                            <i class="fa-solid fa-user-gear fa-2xl"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h5 class="fw-bold mb-0">Welcome back, @ViewBag.AdminName!</h5>
+                            <p class="text-muted small mb-0">System Administrator | @ViewBag.AdminEmail</p>
+                        </div>
+                    </div>
+                    <div class="text-end d-none d-md-block">
+                        <span class="badge bg-label-warning text-dark p-2">
+                            <i class="fa-regular fa-calendar-check me-1"></i> @DateTime.Now.ToString("MMM dd, yyyy")
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card text-white p-3 shadow"
-             style="background:linear-gradient(45deg,#16a34a,#14532d);">
-            <h5>Total Users</h5>
-            <h3>50</h3>
+    <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-chart-line me-2"></i>Real-time Statistics</h4>
+
+    <!-- Statistics Cards Section -->
+    <div class="row g-4">
+        <!-- Total Vehicles -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow text-white p-3 h-100"
+                 style="border-radius: 12px; background: linear-gradient(45deg, #2563eb, #1e3a8a); position: relative; overflow: hidden;">
+                <div class="card-body">
+                    <h6 class="small text-uppercase fw-semibold opacity-75">Total Vehicles</h6>
+                    <h2 class="fw-bold mb-0">@ViewBag.TotalVehicles</h2>
+                    <i class="fa-solid fa-bicycle position-absolute" style="bottom: 10px; right: 10px; font-size: 3.5rem; opacity: 0.15;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Users -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow text-white p-3 h-100"
+                 style="border-radius: 12px; background: linear-gradient(45deg, #16a34a, #14532d); position: relative; overflow: hidden;">
+                <div class="card-body">
+                    <h6 class="small text-uppercase fw-semibold opacity-75">Total Users</h6>
+                    <h2 class="fw-bold mb-0">@ViewBag.TotalUsers</h2>
+                    <i class="fa-solid fa-users position-absolute" style="bottom: 10px; right: 10px; font-size: 3.5rem; opacity: 0.15;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Stations -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow text-white p-3 h-100"
+                 style="border-radius: 12px; background: linear-gradient(45deg, #9333ea, #581c87); position: relative; overflow: hidden;">
+                <div class="card-body">
+                    <h6 class="small text-uppercase fw-semibold opacity-75">Total Stations</h6>
+                    <h2 class="fw-bold mb-0">@ViewBag.TotalStations</h2>
+                    <i class="fa-solid fa-charging-station position-absolute" style="bottom: 10px; right: 10px; font-size: 3.5rem; opacity: 0.15;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Rentals -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow text-white p-3 h-100"
+                 style="border-radius: 12px; background: linear-gradient(45deg, #f97316, #9a3412); position: relative; overflow: hidden;">
+                <div class="card-body">
+                    <h6 class="small text-uppercase fw-semibold opacity-75">Total Rentals</h6>
+                    <h2 class="fw-bold mb-0">@ViewBag.TotalRentals</h2>
+                    <i class="fa-solid fa-file-invoice-dollar position-absolute" style="bottom: 10px; right: 10px; font-size: 3.5rem; opacity: 0.15;"></i>
+                </div>
+            </div>
         </div>
     </div>
-
-    <div class="col-md-3">
-        <div class="card text-white p-3 shadow"
-             style="background:linear-gradient(45deg,#9333ea,#581c87);">
-            <h5>Total Stations</h5>
-            <h3>10</h3>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="card text-white p-3 shadow"
-             style="background:linear-gradient(45deg,#f97316,#9a3412);">
-            <h5>Total Rentals</h5>
-            <h3>120</h3>
-        </div>
-    </div>
-
 </div>
