@@ -24,11 +24,13 @@ namespace SaigonRide.Controllers
 
             if (user == null)
             {
-                ViewBag.Error = "Sai email hoặc password!";
+                ViewBag.Error = "Failed Email or Password!";
                 return View();
             }
 
-            // lưu session
+            
+            HttpContext.Session.SetInt32("UserId", user.Id);
+
             HttpContext.Session.SetString("Email", user.Email ?? "");
             HttpContext.Session.SetString("FullName", user.FullName ?? "User");
             HttpContext.Session.SetString("Phone", user.Phone ?? "N/A");
@@ -42,6 +44,7 @@ namespace SaigonRide.Controllers
             else
             {
                 HttpContext.Session.SetString("Role", "User");
+                
                 return RedirectToAction("Index", "Home");
             }
         }

@@ -1,0 +1,69 @@
+﻿@model IEnumerable<SaigonRide.Models.RentingHistory>
+@{
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+    ViewData["Title"] = "My Rental History";
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-primary">
+            <i class="fa-solid fa-route me-2"></i>My Recent Journeys
+        </h2>
+        <span class="badge bg-secondary">Total: @Model.Count() Trips</span>
+    </div>
+
+    @foreach (var item in Model)
+    {
+        <div class="card shadow-sm mb-4 border-0" style="border-radius: 20px;">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <!-- Left Column: Payment & Date -->
+                    <div class="col-md-3 border-end text-center">
+                        <h4 class="fw-bold text-danger">@item.TotalPrice?.ToString("N0") VNĐ</h4>
+                        <p class="badge bg-primary">@item.Vehicle?.VehicleName</p>
+                        <div class="small text-muted">@item.EndTime?.ToString("MMM dd, yyyy")</div>
+                    </div>
+                    
+                    <!-- Right Column: Trip Timeline -->
+                    <div class="col-md-9 ps-4">
+                        <div class="d-flex">
+                            <!-- Visual Timeline UI -->
+                            <div class="me-3 text-center" style="width: 20px;">
+                                <i class="fa-solid fa-circle text-success small"></i>
+                                <div style="width: 2px; height: 45px; background: #dee2e6; margin: 5px auto;"></div>
+                                <i class="fa-solid fa-location-dot text-danger"></i>
+                            </div>
+                            
+                            <div class="flex-grow-1">
+                                <!-- Start Point -->
+                                <div class="mb-3">
+                                    <span class="text-muted small text-uppercase">Picked up from:</span>
+                                    <h6 class="mb-0 fw-bold">@item.PickupStation?.StationName</h6>
+                                    <span class="small text-muted">@item.StartTime.ToString("HH:mm")</span>
+                                </div>
+                                <!-- End Point -->
+                                <div>
+                                    <span class="text-muted small text-uppercase">Returned to:</span>
+                                    <h6 class="mb-0 fw-bold">@(item.ReturnStation?.StationName ?? "Main Station")</h6>
+                                    <span class="small text-muted">@item.EndTime?.ToString("HH:mm")</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Journey Duration Badge -->
+                            <div class="text-end">
+                                <span class="badge bg-light text-dark border">
+                                    <i class="fa-regular fa-clock me-1"></i>
+                                    @{
+                                        var time = (item.EndTime - item.StartTime)?.TotalMinutes;
+                                        @((int)time)
+                                    }
+                                    mins
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

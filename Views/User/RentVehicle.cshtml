@@ -1,0 +1,77 @@
+﻿@model IEnumerable<SaigonRide.Models.Vehicle>
+@{
+    // Dòng này cực kỳ quan trọng để nó hiện Dashboard giống trang Home nè
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+    ViewData["Title"] = "Vehicle Rental";
+    var stations = ViewBag.Stations as List<SaigonRide.Models.Station>;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold">
+            <i class="fa-solid fa-motorcycle me-2"></i>Choose Your Ride
+        </h2>
+        <span class="badge bg-secondary">@Model.Count() vehicles available</span>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <!-- Thêm hiệu ứng hover cho card giống trang Home của Như -->
+                <div class="card shadow-sm border-0 h-100 rental-card" style="border-radius: 15px;">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            @if (item.Type == "E-Scooter")
+                            {
+                                <i class="fa-solid fa-bolt-lightning fa-3x text-warning"></i>
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-bicycle fa-3x text-success"></i>
+                            }
+                        </div>
+                        
+                        <h5 class="card-title fw-bold">@item.VehicleName</h5>
+                        <p class="badge @(item.Type == "E-Scooter" ? "bg-warning text-dark" : "bg-info text-dark")">
+                            @item.Type
+                        </p>
+                        
+                        <p class="text-muted mt-2">
+                            <i class="fa-solid fa-location-dot me-1 text-danger"></i>
+                            <strong>Station:</strong> @stations?.FirstOrDefault(s => s.Id == item.StationId)?.StationName
+                        </p>
+
+                        <hr class="my-3">
+
+                        <form action="/User/ConfirmRent" method="post">
+                            <input type="hidden" name="vehicleId" value="@item.Id" />
+                            <button type="submit" class="btn btn-primary w-100 fw-bold"
+                                    style="border-radius: 10px; background: linear-gradient(45deg,#2b6cf6,#1e40af); border: none; padding: 10px;"
+                                    onclick="return confirm('Do you want to rent @item.VehicleName?')">
+                                Rent This Ride
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    /* CSS để làm card xịn xò hơn */
+    .rental-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .rental-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.12) !important;
+        }
+</style>

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SaigonRide.Data;
 
@@ -11,9 +12,11 @@ using SaigonRide.Data;
 namespace SaigonRide.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260506044935_AddRentingHistoryTable")]
+    partial class AddRentingHistoryTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,8 +49,8 @@ namespace SaigonRide.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("TotalPrice")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<double>("TotalPrice")
+                        .HasColumnType("float");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -56,12 +59,6 @@ namespace SaigonRide.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PickupStationId");
-
-                    b.HasIndex("ReturnStationId");
-
-                    b.HasIndex("VehicleId");
 
                     b.ToTable("RentingHistories");
                 });
@@ -151,31 +148,6 @@ namespace SaigonRide.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Vehicles");
-                });
-
-            modelBuilder.Entity("SaigonRide.Models.RentingHistory", b =>
-                {
-                    b.HasOne("SaigonRide.Models.Station", "PickupStation")
-                        .WithMany()
-                        .HasForeignKey("PickupStationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SaigonRide.Models.Station", "ReturnStation")
-                        .WithMany()
-                        .HasForeignKey("ReturnStationId");
-
-                    b.HasOne("SaigonRide.Models.Vehicle", "Vehicle")
-                        .WithMany()
-                        .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PickupStation");
-
-                    b.Navigation("ReturnStation");
-
-                    b.Navigation("Vehicle");
                 });
 #pragma warning restore 612, 618
         }

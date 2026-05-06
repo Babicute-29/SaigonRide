@@ -1,0 +1,55 @@
+﻿@model IEnumerable<SaigonRide.Models.RentingHistory>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var stations = ViewBag.Stations as List<SaigonRide.Models.Station>;
+    var vehicles = ViewBag.Vehicles as List<SaigonRide.Models.Vehicle>;
+}
+
+<div class="container-fluid px-4 mt-4">
+    <h2 class="text-primary fw-bold mb-4"><i class="fa-solid fa-users-gear"></i> User Rental Tracking</h2>
+
+    <div class="card shadow border-0">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Vehicle</th>
+                        <th>Pickup Station</th>
+                        <th>Return Station</th>
+                        <th>Duration</th>
+                        <th>Estimated Cost</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var vehicle = vehicles.FirstOrDefault(v => v.Id == item.VehicleId);
+                        var pickup = stations.FirstOrDefault(s => s.Id == item.PickupStationId)?.StationName;
+                        var dropoff = stations.FirstOrDefault(s => s.Id == item.ReturnStationId)?.StationName ?? "---";
+                        
+                        // Tính thời gian thuê
+                        var endTime = item.EndTime ?? DateTime.Now;
+                        var duration = endTime - item.StartTime;
+                        
+                        // Tính tiền (Ví dụ 10k/giờ)
+                        double price = Math.Ceiling(duration.TotalHours) * 10000;
+
+                        <tr>
+                            <td><span class="fw-bold">@vehicle?.VehicleName</span> (@vehicle?.Type)</td>
+                            <td>@pickup</td>
+                            <td>@dropoff</td>
+                            <td>@((int)duration.TotalMinutes) mins</td>
+                            <td class="text-danger fw-bold">@price.ToString("N0") VNĐ</td>
+                            <td>
+                                <span class="badge @(item.Status == "In Progress" ? "bg-warning" : "bg-success")">
+                                    @item.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
