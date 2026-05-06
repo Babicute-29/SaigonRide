@@ -28,7 +28,7 @@ namespace SaigonRide.Models
 
         // Sửa lỗi Non-nullable bằng cách gán chuỗi rỗng mặc định
         public string Status { get; set; } = "In Progress";
-
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? TotalPrice { get; set; }
     }
 }

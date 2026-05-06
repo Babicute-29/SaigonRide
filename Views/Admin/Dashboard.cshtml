@@ -1,4 +1,5 @@
-﻿@{
+﻿@model dynamic
+@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Admin Dashboard";
 }
@@ -19,8 +20,8 @@
                         </div>
                     </div>
                     <div class="text-end d-none d-md-block">
-                        <span class="badge bg-label-warning text-dark p-2">
-                            <i class="fa-regular fa-calendar-check me-1"></i> @DateTime.Now.ToString("MMM dd, yyyy")
+                        <span class="badge bg-light text-dark border p-2" style="border-radius: 8px;">
+                            <i class="fa-regular fa-calendar-check me-1 text-warning"></i> @DateTime.Now.ToString("MMM dd, yyyy")
                         </span>
                     </div>
                 </div>
@@ -28,56 +29,80 @@
         </div>
     </div>
 
-    <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-chart-line me-2"></i>Real-time Statistics</h4>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0 text-dark"><i class="fa-solid fa-chart-line me-2 text-primary"></i>Real-time Statistics</h4>
+        <a href="/Admin/SupportManagement" class="btn btn-sm btn-primary fw-bold px-3 shadow-sm" style="border-radius: 8px;">
+            <i class="fa-solid fa-headset me-1"></i> View Support Inbox
+        </a>
+    </div>
 
     <!-- Statistics Cards Section -->
     <div class="row g-4">
         <!-- Total Vehicles -->
-        <div class="col-md-3">
-            <div class="card border-0 shadow text-white p-3 h-100"
-                 style="border-radius: 12px; background: linear-gradient(45deg, #2563eb, #1e3a8a); position: relative; overflow: hidden;">
+        <div class="col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm text-white p-3 h-100"
+                 style="border-radius: 15px; background: linear-gradient(45deg, #2563eb, #1e3a8a); position: relative; overflow: hidden;">
                 <div class="card-body">
-                    <h6 class="small text-uppercase fw-semibold opacity-75">Total Vehicles</h6>
+                    <h6 class="small text-uppercase fw-semibold opacity-75">Vehicles</h6>
                     <h2 class="fw-bold mb-0">@ViewBag.TotalVehicles</h2>
-                    <i class="fa-solid fa-bicycle position-absolute" style="bottom: 10px; right: 10px; font-size: 3.5rem; opacity: 0.15;"></i>
+                    <i class="fa-solid fa-bicycle position-absolute" style="bottom: 10px; right: 10px; font-size: 2.5rem; opacity: 0.2;"></i>
                 </div>
             </div>
         </div>
 
         <!-- Total Users -->
-        <div class="col-md-3">
-            <div class="card border-0 shadow text-white p-3 h-100"
-                 style="border-radius: 12px; background: linear-gradient(45deg, #16a34a, #14532d); position: relative; overflow: hidden;">
+        <div class="col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm text-white p-3 h-100"
+                 style="border-radius: 15px; background: linear-gradient(45deg, #16a34a, #14532d); position: relative; overflow: hidden;">
                 <div class="card-body">
-                    <h6 class="small text-uppercase fw-semibold opacity-75">Total Users</h6>
+                    <h6 class="small text-uppercase fw-semibold opacity-75">Users</h6>
                     <h2 class="fw-bold mb-0">@ViewBag.TotalUsers</h2>
-                    <i class="fa-solid fa-users position-absolute" style="bottom: 10px; right: 10px; font-size: 3.5rem; opacity: 0.15;"></i>
+                    <i class="fa-solid fa-users position-absolute" style="bottom: 10px; right: 10px; font-size: 2.5rem; opacity: 0.2;"></i>
                 </div>
             </div>
         </div>
 
         <!-- Total Stations -->
-        <div class="col-md-3">
-            <div class="card border-0 shadow text-white p-3 h-100"
-                 style="border-radius: 12px; background: linear-gradient(45deg, #9333ea, #581c87); position: relative; overflow: hidden;">
+        <div class="col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm text-white p-3 h-100"
+                 style="border-radius: 15px; background: linear-gradient(45deg, #9333ea, #581c87); position: relative; overflow: hidden;">
                 <div class="card-body">
-                    <h6 class="small text-uppercase fw-semibold opacity-75">Total Stations</h6>
+                    <h6 class="small text-uppercase fw-semibold opacity-75">Stations</h6>
                     <h2 class="fw-bold mb-0">@ViewBag.TotalStations</h2>
-                    <i class="fa-solid fa-charging-station position-absolute" style="bottom: 10px; right: 10px; font-size: 3.5rem; opacity: 0.15;"></i>
+                    <i class="fa-solid fa-charging-station position-absolute" style="bottom: 10px; right: 10px; font-size: 2.5rem; opacity: 0.2;"></i>
                 </div>
             </div>
         </div>
 
         <!-- Total Rentals -->
-        <div class="col-md-3">
-            <div class="card border-0 shadow text-white p-3 h-100"
-                 style="border-radius: 12px; background: linear-gradient(45deg, #f97316, #9a3412); position: relative; overflow: hidden;">
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm text-white p-3 h-100"
+                 style="border-radius: 15px; background: linear-gradient(45deg, #f97316, #9a3412); position: relative; overflow: hidden;">
                 <div class="card-body">
                     <h6 class="small text-uppercase fw-semibold opacity-75">Total Rentals</h6>
                     <h2 class="fw-bold mb-0">@ViewBag.TotalRentals</h2>
-                    <i class="fa-solid fa-file-invoice-dollar position-absolute" style="bottom: 10px; right: 10px; font-size: 3.5rem; opacity: 0.15;"></i>
+                    <i class="fa-solid fa-file-invoice-dollar position-absolute" style="bottom: 10px; right: 10px; font-size: 2.5rem; opacity: 0.2;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Support Pending -->
+        <div class="col-md-6 col-xl-3">
+            <div class="card border-0 shadow-sm text-dark p-3 h-100"
+                 style="border-radius: 15px; background: #fff3cd; border: 1px solid #ffeeba; position: relative; overflow: hidden;">
+                <div class="card-body">
+                    <h6 class="small text-uppercase fw-bold text-warning">Support Pending</h6>
+                    <h2 class="fw-bold mb-0 text-dark">@ViewBag.PendingSupport</h2>
+                    <i class="fa-solid fa-headset position-absolute" style="bottom: 10px; right: 10px; font-size: 2.5rem; opacity: 0.1; color: #856404;"></i>
+                    <div class="mt-2">
+                        <a href="/Admin/SupportManagement" class="small text-decoration-none fw-bold text-warning">
+                            Respond now <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <!-- Bạn có thể thêm một biểu đồ hoặc bảng tóm tắt ngắn gọn ở đây trong tương lai -->
 </div>

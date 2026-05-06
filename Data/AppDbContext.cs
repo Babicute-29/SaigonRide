@@ -18,5 +18,7 @@ namespace SaigonRide.Data
         public DbSet<Vehicle> Vehicles { get; set; }
 
         public DbSet<RentingHistory> RentingHistories { get; set; }
+
+        public DbSet<SupportReport> SupportReports { get; set; }
     }
 }

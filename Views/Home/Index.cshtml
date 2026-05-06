@@ -6,56 +6,141 @@
 <h2 class="mb-4">Welcome</h2>
 
 <!-- PROFILE CARD -->
-<div class="card shadow p-4 mb-4" style="border-radius:15px;">
+<div class="card shadow border-0 p-4 mb-4" style="border-radius:15px;">
     <div class="row">
         <div class="col-md-6">
-            <p class="text-muted">Full Name</p>
-            <h5>@ViewBag.FullName</h5>
+            <p class="text-muted small mb-1">Full Name</p>
+            <h5 class="fw-bold">@ViewBag.User?.FullName</h5>
 
-            <p class="text-muted mt-3">Phone</p>
-            <h5>@ViewBag.Phone</h5>
+            <p class="text-muted small mt-3 mb-1">Phone</p>
+            <h5 class="fw-bold">@ViewBag.User?.Phone</h5>
 
-            <p class="text-muted mt-3">Role</p>
-            <h5>@Context.Session.GetString("Role")</h5>
+            <p class="text-muted small mt-3 mb-1">Role</p>
+            <h5 class="fw-bold"><span class="badge bg-light text-dark border">@Context.Session.GetString("Role")</span></h5>
         </div>
 
         <div class="col-md-6">
-            <p class="text-muted">Email</p>
-            <h5>@ViewBag.Email</h5>
+            <p class="text-muted small mb-1">Email</p>
+            <h5 class="fw-bold">@ViewBag.User?.Email</h5>
 
-            <p class="text-muted mt-3">Country</p>
-            <h5>@ViewBag.Country</h5>
+            <p class="text-muted small mt-3 mb-1">Country</p>
+            <h5 class="fw-bold">@ViewBag.User?.Country</h5>
         </div>
     </div>
 </div>
 
 <!-- QUICK ACTIONS -->
-<div class="card shadow p-4" style="border-radius:15px;">
-    <h4 class="mb-4">Quick Actions</h4>
-
+<div class="card shadow border-0 p-4 mb-4" style="border-radius:15px;">
+    <h4 class="fw-bold mb-4">Quick Actions</h4>
     <div class="row text-center g-3">
-        <!-- Nút 1: Xem danh sách xe để thuê -->
         <div class="col-md-4">
-            <a href="/User/RentVehicle" class="btn w-100 text-white shadow-sm"
-                   style="background: linear-gradient(45deg,#2b6cf6,#1e40af); padding:15px; border-radius:10px; border:none;">
+            <a href="/User/RentVehicle" class="btn w-100 text-white shadow-sm py-3"
+               style="background: linear-gradient(45deg,#2b6cf6,#1e40af); border-radius:12px; border:none;">
                 <i class="fa-solid fa-bicycle me-2"></i> View Available Vehicle
             </a>
         </div>
-
-        <!-- Nút 2: Xem xe đang thuê hiện tại -->
         <div class="col-md-4">
-            <a href="/User/MyRental" class="btn w-100 text-white shadow-sm"
-                   style="background: linear-gradient(45deg,#16a34a,#15803d); padding:15px; border-radius:10px; border:none;">
+            <a href="/User/MyRental" class="btn w-100 text-white shadow-sm py-3"
+               style="background: linear-gradient(45deg,#16a34a,#15803d); border-radius:12px; border:none;">
                 <i class="fa-solid fa-clock-rotate-left me-2"></i> My Active Rental
             </a>
         </div>
-
-        <!-- Nút 3: Xem lịch sử -->
         <div class="col-md-4">
-            <a href="/User/RentalHistory" class="btn w-100 text-white shadow-sm"
-                   style="background: linear-gradient(45deg,#9333ea,#6b21a8); padding:15px; border-radius:10px; border:none;">
+            <a href="/User/RentalHistory" class="btn w-100 text-white shadow-sm py-3"
+               style="background: linear-gradient(45deg,#9333ea,#6b21a8); border-radius:12px; border:none;">
                 <i class="fa-solid fa-history me-2"></i> My Rental History
             </a>
         </div>
     </div>
 </div>
+
+<!-- SUPPORT HISTORY SECTION (Phần mới thêm cho Như nè) -->
+<div class="card shadow border-0 p-4" style="border-radius:15px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-headset me-2"></i>Support History</h4>
+        <button class="btn btn-primary fw-bold px-4 shadow-sm" style="border-radius: 10px;" data-bs-toggle="modal" data-bs-target="#reportModal">
+            <i class="fa-solid fa-plus me-1"></i> New Request
+        </button>
+    </div>
+
+    @if (ViewBag.MyReports == null || !((List<SaigonRide.Models.SupportReport>)ViewBag.MyReports).Any())
+    {
+        <div class="text-center py-5 bg-light rounded-3">
+            <i class="fa-solid fa-comment-slash fa-3x text-muted mb-3"></i>
+            <p class="text-muted mb-0">You haven't sent any support requests yet.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle border-top">
+                <thead>
+                    <tr class="text-muted small">
+                        <th>DATE</th>
+                        <th>MESSAGE</th>
+                        <th>STATUS</th>
+                        <th>ADMIN RESPONSE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var report in (List<SaigonRide.Models.SupportReport>)ViewBag.MyReports)
+                    {
+                        <tr>
+                            <td class="small text-muted">@report.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="fw-medium">@report.Message</td>
+                            <td>
+                                <span class="badge rounded-pill @(report.Status == "Pending" ? "bg-warning text-dark" : "bg-success") px-3">
+                                    @report.Status
+                                </span>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(report.AdminReply))
+                                {
+                                    <div class="p-2 rounded bg-light border-start border-primary border-3 small">
+                                        <i class="fa-solid fa-reply me-1 text-primary"></i> @report.AdminReply
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small italic">Waiting for reply...</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- MODAL GỬI HỖ TRỢ -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 20px;">
+            <form asp-action="SendSupport" asp-controller="User" method="post">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="modal-title fw-bold">Contact Support</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Description of the issue</label>
+                        <textarea name="Message" class="form-control border-2" rows="4" 
+                                  placeholder="What can we help you with?" required 
+                                  style="border-radius: 12px;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-bold px-4" style="border-radius: 10px;">Send Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .italic { font-style: italic; }
+    .table thead th { border-bottom: none; }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); transition: all 0.2s; }
+</style>

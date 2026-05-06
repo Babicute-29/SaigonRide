@@ -1,0 +1,101 @@
+﻿@model IEnumerable<SaigonRide.Models.SupportReport>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Support Management";
+}
+
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold mb-0">
+            <i class="fa-solid fa-envelope-open-text me-2"></i>Support Requests
+        </h2>
+        <div class="bg-white px-3 py-2 rounded shadow-sm border">
+            <span class="text-muted small fw-bold text-uppercase">Total Pending: </span>
+            <span class="badge bg-danger rounded-pill">@Model.Count(m => m.Status == "Pending")</span>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card border-0 shadow-sm p-5 text-center" style="border-radius: 20px;">
+            <div class="card-body">
+                <i class="fa-solid fa-inbox fa-4x text-light mb-3"></i>
+                <h4 class="text-muted">No support requests found.</h4>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model.OrderByDescending(m => m.CreatedAt))
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card shadow-sm border-0 h-100" style="border-radius: 20px; transition: transform 0.2s; position: relative;">
+                        
+                        <!-- Nút Xóa (Delete Permanent) - Nằm góc trên bên phải -->
+                        <div style="position: absolute; top: 15px; right: 15px; z-index: 10;">
+                            <form asp-action="DeleteSupport" asp-controller="Admin" method="post" 
+                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn yêu cầu này khỏi Database không?')">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit" class="btn btn-link text-danger p-0 shadow-none" title="Delete Permanent">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="card-body p-4 d-flex flex-column">
+                            <!-- Header: Status & Time -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="badge @(item.Status == "Pending" ? "bg-danger" : "bg-success") px-3 py-2">
+                                    <i class="fa-solid @(item.Status == "Pending" ? "fa-clock" : "fa-check-circle") me-1"></i> @item.Status
+                                </span>
+                                <small class="text-muted fw-semibold me-4">@item.CreatedAt.ToString("HH:mm | dd/MM/yyyy")</small>
+                            </div>
+
+                            <!-- User Info -->
+                            <div class="mb-3">
+                                <h6 class="fw-bold text-dark mb-1">
+                                    <i class="fa-solid fa-user-circle me-2 text-primary"></i>@item.User?.FullName
+                                </h6>
+                                <p class="text-primary small mb-0 fw-semibold">
+                                    <i class="fa-solid fa-bicycle me-2"></i>Vehicle: @(item.Vehicle?.VehicleName ?? "N/A")
+                                </p>
+                            </div>
+                            
+                            <!-- Message Preview -->
+                            <div class="bg-light p-3 rounded mb-4 flex-grow-1" style="border-left: 4px solid #dee2e6;">
+                                <p class="mb-0 text-dark small italic" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                    "@item.Message"
+                                </p>
+                            </div>
+
+                            <!-- Action: Link to Detail Page -->
+                            <div class="mt-auto">
+                                <a href="/Admin/SupportDetail/@item.Id" class="btn @(item.Status == "Pending" ? "btn-primary" : "btn-outline-secondary") w-100 fw-bold py-2 shadow-sm" style="border-radius: 12px;">
+                                    @if (item.Status == "Pending")
+                                    {
+                                        <i class="fa-solid fa-reply me-2"></i><span>Respond Now</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-solid fa-eye me-2"></i><span>View Conversation</span>
+                                    }
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    /* Hiệu ứng hover cho thẻ card giúp Dashboard sinh động hơn */
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    .italic { font-style: italic; }
+    .btn-link:hover { opacity: 0.7; }
+</style>

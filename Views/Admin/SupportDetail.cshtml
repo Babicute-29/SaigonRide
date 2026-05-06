@@ -1,0 +1,86 @@
+﻿@model SaigonRide.Models.SupportReport
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Support Conversation";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center mb-4">
+                <a href="/Admin/SupportManagement" class="btn btn-light rounded-circle me-3 shadow-sm">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h4 class="fw-bold mb-0">Support Ticket #@Model.Id</h4>
+            </div>
+
+            <!-- Khung hội thoại -->
+            <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden;">
+                <!-- Thông tin User & Xe: Đã cập nhật hiện Full Name -->
+                <div class="card-header bg-white border-bottom p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px;">
+                            <i class="fa-solid fa-user-tie fa-lg"></i>
+                        </div>
+                        <div class="ms-3">
+                            <!-- Hiển thị tên người dùng thay vì ID -->
+                            <h5 class="fw-bold mb-0 text-dark">@Model.User?.FullName</h5>
+                            <div class="text-muted small">
+                                <span><i class="fa-solid fa-fingerprint me-1"></i>ID: @Model.UserId</span>
+                                <span class="mx-2">|</span>
+                                <span><i class="fa-solid fa-bicycle me-1"></i>Vehicle: @(Model.Vehicle?.VehicleName ?? "General")</span>
+                            </div>
+                        </div>
+                        <span class="badge @(Model.Status == "Pending" ? "bg-danger" : "bg-success") ms-auto px-3 py-2 rounded-pill">
+                             <i class="fa-solid @(Model.Status == "Pending" ? "fa-clock" : "fa-check-circle") me-1"></i> @Model.Status
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 bg-light" style="min-height: 350px; background-image: url('https://www.transparenttextures.com/patterns/cubes.png');">
+                    <!-- Tin nhắn từ User -->
+                    <div class="d-flex mb-4">
+                        <div class="bg-white p-3 shadow-sm border" style="border-radius: 0 18px 18px 18px; max-width: 85%;">
+                            <p class="mb-1 text-dark">@Model.Message</p>
+                            <div class="text-end">
+                                <small class="text-muted" style="font-size: 0.65rem;">
+                                    <i class="fa-regular fa-clock me-1"></i>@Model.CreatedAt.ToString("HH:mm | dd/MM/yyyy")
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tin nhắn phản hồi của Admin -->
+                    @if (!string.IsNullOrEmpty(Model.AdminReply))
+                    {
+                        <div class="d-flex justify-content-end mb-4">
+                            <div class="bg-primary text-white p-3 shadow-sm" style="border-radius: 18px 0 18px 18px; max-width: 85%;">
+                                <p class="mb-1">@Model.AdminReply</p>
+                                <div class="text-start">
+                                    <small class="opacity-75" style="font-size: 0.65rem;">
+                                        <i class="fa-solid fa-check-double me-1"></i>Replied by Admin
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Ô nhập liệu phản hồi -->
+                <div class="card-footer bg-white border-0 p-4">
+                    <form asp-action="ReplySupportDetail" asp-controller="Admin" method="post">
+                        <input type="hidden" name="Id" value="@Model.Id" />
+                        <div class="input-group shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                            <textarea name="AdminReply" class="form-control border-2 border-primary border-opacity-25" rows="2"
+                                      placeholder="Write your response to @Model.User?.FullName..." required
+                                      style="border-right: none;"></textarea>
+                            <button class="btn btn-primary px-4" type="submit">
+                                <i class="fa-solid fa-paper-plane fa-lg"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SaigonRide.Data;
 using SaigonRide.Models;
 using SaigonRide.Services;
-using SaigonRide.Data; // Thêm cái này để dùng AppDbContext
 
 namespace SaigonRide.Controllers
 {
@@ -9,9 +10,8 @@ namespace SaigonRide.Controllers
     {
         private readonly StationService _stationService;
         private readonly VehicleService _vehicleService;
-        private readonly AppDbContext _context; // Khai báo thêm Context để quản lý RentingHistory
+        private readonly AppDbContext _context;
 
-        // Cập nhật Constructor: Thêm AppDbContext vào
         public AdminController(StationService stationService, VehicleService vehicleService, AppDbContext context)
         {
             _stationService = stationService;
@@ -19,33 +19,32 @@ namespace SaigonRide.Controllers
             _context = context;
         }
 
+        // Hàm tiện ích để kiểm tra quyền Admin nhanh
+        private bool IsAdmin() => HttpContext.Session.GetString("Role") == "Admin";
+
+        #region DASHBOARD
         public IActionResult Dashboard()
         {
-            var role = HttpContext.Session.GetString("Role");
-            if (role != "Admin") return RedirectToAction("Login", "Auth");
+            if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
-            // 1. Lấy thông tin Admin từ Session để hiển thị lời chào
-            // Giả sử Nhu đã lưu "Username" lúc Login, nếu chưa hãy thay bằng tên cố định hoặc lấy từ DB
-            ViewBag.AdminName = HttpContext.Session.GetString("Username") ?? "giaphuc";
-            ViewBag.AdminEmail = "admin@saigonride.com"; // Hoặc lấy từ Session nếu có
+            ViewBag.AdminName = HttpContext.Session.GetString("Username") ?? "Administrator";
+            ViewBag.AdminEmail = "admin@saigonride.com";
 
-            // 2. Đếm số liệu thực tế từ Database thông qua _context
             ViewBag.TotalVehicles = _context.Vehicles.Count();
             ViewBag.TotalUsers = _context.Users.Count(u => u.Role == "User");
             ViewBag.TotalStations = _context.Stations.Count();
             ViewBag.TotalRentals = _context.RentingHistories.Count();
+            ViewBag.PendingSupport = _context.SupportReports.Count(r => r.Status == "Pending");
 
             return View();
         }
+        #endregion
 
         #region STATION MANAGEMENT
-        // ... Giữ nguyên phần Station Nhu đã có ...
         public IActionResult ManageStation()
         {
-            var role = HttpContext.Session.GetString("Role");
-            if (role != "Admin") return RedirectToAction("Login", "Auth");
-            var stations = _stationService.GetList();
-            return View(stations);
+            if (!IsAdmin()) return RedirectToAction("Login", "Auth");
+            return View(_stationService.GetList());
         }
 
         [HttpPost]
@@ -66,11 +65,9 @@ namespace SaigonRide.Controllers
         #region VEHICLE MANAGEMENT
         public IActionResult ManageVehicle()
         {
-            var role = HttpContext.Session.GetString("Role");
-            if (role != "Admin") return RedirectToAction("Login", "Auth");
+            if (!IsAdmin()) return RedirectToAction("Login", "Auth");
             ViewBag.Stations = _stationService.GetList();
-            var vehicles = _vehicleService.GetList();
-            return View(vehicles);
+            return View(_vehicleService.GetList());
         }
 
         [HttpPost]
@@ -80,13 +77,9 @@ namespace SaigonRide.Controllers
             string prefix = v.Type == "E-Scooter" ? "ES" : "SD";
             int count = allVehicles.Count(x => x.Type == v.Type) + 1;
             v.VehicleName = $"{prefix}{count:D2}";
-            v.Status = "Available"; // Luôn mặc định xe mới là sẵn sàng
+            v.Status = "Available";
 
-            if (ModelState.IsValid)
-            {
-                _vehicleService.Create(v);
-                TempData["Success"] = $"Created {v.VehicleName} successfully!";
-            }
+            if (ModelState.IsValid) { _vehicleService.Create(v); TempData["Success"] = $"Created {v.VehicleName} successfully!"; }
             return RedirectToAction("ManageVehicle");
         }
 
@@ -102,11 +95,7 @@ namespace SaigonRide.Controllers
             var vehicle = _vehicleService.GetList().FirstOrDefault(v => v.Id == id);
             if (vehicle != null)
             {
-                if (vehicle.Status == "Rented")
-                {
-                    TempData["Error"] = $"Cannot delete {vehicle.VehicleName} - It's currently rented!";
-                    return RedirectToAction("ManageVehicle");
-                }
+                if (vehicle.Status == "Rented") { TempData["Error"] = "Cannot delete rented vehicle!"; return RedirectToAction("ManageVehicle"); }
                 _vehicleService.Remove(id);
                 TempData["Success"] = "Deleted!";
             }
@@ -114,24 +103,78 @@ namespace SaigonRide.Controllers
         }
         #endregion
 
-        #region USER RENTAL MANAGEMENT (HOÀN THIỆN CÁI SỐ 3)
+        #region SUPPORT & REPORT MANAGEMENT (ĐÃ CẬP NHẬT THÊM XÓA)
 
+        public IActionResult SupportManagement()
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Auth");
+
+            var reports = _context.SupportReports
+                .Include(r => r.User)
+                .Include(r => r.Vehicle)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToList();
+
+            return View(reports);
+        }
+
+        public IActionResult SupportDetail(int id)
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Auth");
+
+            var report = _context.SupportReports
+                .Include(r => r.User)
+                .Include(r => r.Vehicle)
+                .FirstOrDefault(r => r.Id == id);
+
+            if (report == null) return NotFound();
+            return View(report);
+        }
+
+        [HttpPost]
+        public IActionResult ReplySupportDetail(int Id, string AdminReply)
+        {
+            var report = _context.SupportReports.Find(Id);
+            if (report != null)
+            {
+                report.AdminReply = AdminReply;
+                report.Status = "Resolved";
+                _context.SaveChanges();
+                TempData["Success"] = "Reply sent successfully!";
+            }
+            return RedirectToAction("SupportDetail", new { id = Id });
+        }
+
+        // CẬP NHẬT MỚI: Xóa yêu cầu hỗ trợ khỏi Database
+        [HttpPost]
+        public IActionResult DeleteSupport(int id)
+        {
+            if (!IsAdmin()) return Json(new { success = false });
+
+            var report = _context.SupportReports.Find(id);
+            if (report != null)
+            {
+                _context.SupportReports.Remove(report);
+                _context.SaveChanges();
+                TempData["Success"] = "Support request deleted!";
+            }
+            return RedirectToAction("SupportManagement");
+        }
+
+        #endregion
+
+        #region USER RENTAL HISTORY
         public IActionResult ManageUser()
         {
-            var role = HttpContext.Session.GetString("Role");
-            if (role != "Admin") return RedirectToAction("Login", "Auth");
+            if (!IsAdmin()) return RedirectToAction("Login", "Auth");
 
-            // 1. Lấy toàn bộ lịch sử thuê
             var histories = _context.RentingHistories.OrderByDescending(h => h.StartTime).ToList();
-
-            // 2. Truyền thêm dữ liệu bổ trợ để hiển thị tên thay vì ID
             ViewBag.Users = _context.Users.ToList();
             ViewBag.Vehicles = _vehicleService.GetList();
             ViewBag.Stations = _stationService.GetList();
 
             return View(histories);
         }
-
         #endregion
     }
 }

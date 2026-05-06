@@ -19,7 +19,27 @@ namespace SaigonRide.Controllers
             _stationService = stationService;
         }
 
-        // 1. Danh sách xe sẵn sàng thuê
+        // 1. Trang cá nhân (Cập nhật để hiện Support History)
+        public IActionResult Index()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null) return RedirectToAction("Login", "Auth");
+
+            // Lấy thông tin user (để hiện FullName, Email... như trong image_6a9bea.jpg)
+            var user = _context.Users.Find(userId);
+            ViewBag.User = user;
+
+            // Lấy danh sách hỗ trợ của riêng user này
+            ViewBag.MyReports = _context.SupportReports
+                .Include(r => r.Vehicle)
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToList();
+
+            return View();
+        }
+
+        // 2. Danh sách xe sẵn sàng thuê
         public IActionResult RentVehicle()
         {
             var availableVehicles = _vehicleService.GetList().Where(v => v.Status == "Available").ToList();
@@ -27,7 +47,7 @@ namespace SaigonRide.Controllers
             return View(availableVehicles);
         }
 
-        // 2. Xác nhận thuê xe
+        // 3. Xác nhận thuê xe
         [HttpPost]
         public IActionResult ConfirmRent(int vehicleId)
         {
@@ -58,7 +78,7 @@ namespace SaigonRide.Controllers
             return RedirectToAction("MyRental");
         }
 
-        // 3. Xem xe đang thuê hiện tại (Có đồng hồ đếm)
+        // 4. Xem xe đang thuê hiện tại
         public IActionResult MyRental()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -72,7 +92,7 @@ namespace SaigonRide.Controllers
             return View(currentRent);
         }
 
-        // 4. Trả xe và ghi nhận trạm kết thúc chặng
+        // 5. Trả xe và tính tiền (Giữ nguyên logic giảm giá 15%)
         [HttpPost]
         public IActionResult ReturnVehicle(int historyId)
         {
@@ -81,23 +101,17 @@ namespace SaigonRide.Controllers
                 .FirstOrDefault(h => h.Id == historyId);
 
             if (history == null || history.Status != "In Progress")
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index");
 
             history.EndTime = DateTime.Now;
             history.Status = "Completed";
             history.ReturnStationId = history.PickupStationId;
 
-            // --- LOGIC TÍNH TIỀN THEO ĐỀ BÀI ---
             TimeSpan duration = history.EndTime.Value - history.StartTime;
-            double totalMinutes = Math.Max(1, duration.TotalMinutes); // Ít nhất tính 1 phút
+            double totalMinutes = Math.Max(1, duration.TotalMinutes);
 
-            // 1. Xác định đơn giá dựa trên loại xe
             decimal ratePerMinute = (history.Vehicle?.Type == "E-Scooter") ? 1500m : 500m;
-
-            // 2. Tính giá gốc
             decimal basePrice = (decimal)totalMinutes * ratePerMinute;
-
-            // 3. Áp dụng giảm giá 15% (Location Discount)
             decimal discount = basePrice * 0.15m;
             history.TotalPrice = basePrice - discount;
 
@@ -107,7 +121,7 @@ namespace SaigonRide.Controllers
             return RedirectToAction("RentalHistory");
         }
 
-        // 5. Lịch sử các chặng đã đi
+        // 6. Lịch sử các chặng đã đi
         public IActionResult RentalHistory()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -116,12 +130,37 @@ namespace SaigonRide.Controllers
             var histories = _context.RentingHistories
                 .Include(h => h.Vehicle)
                 .Include(h => h.PickupStation)
-                .Include(h => h.ReturnStation) // Kéo thêm dữ liệu trạm trả để hiện chặng đường
+                .Include(h => h.ReturnStation)
                 .Where(h => h.UserId == userId && h.Status == "Completed")
                 .OrderByDescending(h => h.EndTime)
                 .ToList();
 
             return View(histories);
+        }
+
+        // --- PHẦN HỖ TRỢ (SUPPORT) ---
+
+        // 7. Gửi yêu cầu hỗ trợ mới
+        [HttpPost]
+        public IActionResult SendSupport(int? VehicleId, string Message)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null) return RedirectToAction("Login", "Auth");
+
+            var newReport = new SupportReport
+            {
+                UserId = userId.Value,
+                VehicleId = VehicleId,
+                Message = Message,
+                Status = "Pending",
+                CreatedAt = DateTime.Now
+            };
+
+            _context.SupportReports.Add(newReport);
+            _context.SaveChanges();
+
+            TempData["Success"] = "Your report has been sent. We will get back to you soon!";
+            return RedirectToAction("Index", "Home");
         }
     }
 }

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using SaigonRide.Data; // Cần thiết để dùng AppDbContext
 using SaigonRide.Models;
+using Microsoft.EntityFrameworkCore; // Cần thiết để dùng .Include()
 using System.Diagnostics;
 
 namespace SaigonRide.Controllers
@@ -7,18 +9,32 @@ namespace SaigonRide.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly AppDbContext _context; // Khai báo context để lấy dữ liệu Support
 
-        public HomeController(ILogger<HomeController> logger)
+        // Cập nhật Constructor để Inject AppDbContext
+        public HomeController(ILogger<HomeController> logger, AppDbContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
         public IActionResult Index()
         {
-            ViewBag.FullName = HttpContext.Session.GetString("FullName");
-            ViewBag.Email = HttpContext.Session.GetString("Email");
-            ViewBag.Phone = HttpContext.Session.GetString("Phone");
-            ViewBag.Country = HttpContext.Session.GetString("Country");
+            // 1. Kiểm tra Login
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null) return RedirectToAction("Login", "Auth");
+
+            // 2. Lấy thông tin User đầy đủ từ DB để hiện lên Profile Card
+            var user = _context.Users.Find(userId);
+            ViewBag.User = user;
+
+            // 3. Lấy lịch sử hỗ trợ để hiện lên bảng (Phần quan trọng để hiện tên)
+            ViewBag.MyReports = _context.SupportReports
+                .Include(r => r.User)    // Lệnh này giúp lấy FullName thay vì số ID
+                .Include(r => r.Vehicle)
+                .Where(r => r.UserId == userId.Value)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToList();
 
             return View();
         }
