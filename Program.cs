@@ -1,6 +1,7 @@
 using SaigonRide.Data;
 using SaigonRide.Repositories;
 using SaigonRide.Services;
+using SaigonRide.Services.Payments; // Thêm namespace chứa các file API thanh toán
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,26 +9,31 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// QUAN TRỌNG: Đảm bảo Session được cấu hình để lưu UserId khi User đăng nhập
+// Cấu hình Session để lưu trữ trạng thái đăng nhập của sinh viên
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // Session tồn tại trong 30 phút
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
 
+// Cấu hình kết nối Database SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. Đăng ký các Repository
+// 2. Đăng ký các Repository (Lớp tương tác dữ liệu)
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<StationRepository>();
 builder.Services.AddScoped<VehicleRepository>();
 
-// 3. Đăng ký các Service
+// 3. Đăng ký các Service (Lớp xử lý nghiệp vụ)
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<StationService>();
 builder.Services.AddScoped<VehicleService>();
+
+// --- ĐĂNG KÝ CÁC DỊCH VỤ THANH TOÁN QR ---
+builder.Services.AddScoped<MomoService>();
+builder.Services.AddScoped<PaypalService>();
 
 var app = builder.Build();
 
@@ -47,6 +53,7 @@ app.UseRouting();
 app.UseSession();
 app.UseAuthorization();
 
+// Thiết lập trang đăng nhập là trang mặc định khi khởi chạy ứng dụng
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Login}/{id?}");

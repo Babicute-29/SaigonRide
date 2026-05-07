@@ -4,6 +4,9 @@
     ViewData["Title"] = "My Active Rental";
 }
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <div class="container mt-5">
     <h2 class="fw-bold text-primary mb-4"><i class="fa-solid fa-person-biking me-2"></i>Current Journey</h2>
 
@@ -19,16 +22,13 @@
     }
     else
     {
-        <div class="row">
-            <!-- Vehicle Information -->
+        <div class="row" id="mainJourneyArea">
             <div class="col-md-5">
                 <div class="card shadow border-0 p-4 mb-4" style="border-radius: 20px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);">
                     <h5 class="text-muted small text-uppercase fw-bold mb-3">Vehicle Details</h5>
                     <h3 class="fw-bold text-dark">@Model.Vehicle?.VehicleName</h3>
                     <p class="badge bg-primary px-3 py-2">@Model.Vehicle?.Type</p>
-                    
                     <hr>
-                    
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Pickup Station:</span>
                         <span class="fw-bold">@Model.PickupStation?.StationName</span>
@@ -38,7 +38,6 @@
                         <span class="fw-bold">@Model.StartTime.ToString("HH:mm | MMM dd, yyyy")</span>
                     </div>
 
-                    <!-- Chức năng Report mới cho đồ án -->
                     <div class="mt-4 pt-3 border-top">
                         <button class="btn btn-outline-warning w-100 fw-bold py-2" data-bs-toggle="modal" data-bs-target="#reportModal" style="border-radius: 12px;">
                             <i class="fa-solid fa-triangle-exclamation me-2"></i> Report Issue / Support
@@ -47,11 +46,9 @@
                 </div>
             </div>
 
-            <!-- Timer & Billing Stats -->
             <div class="col-md-7">
                 <div class="card shadow border-0 text-center p-4 mb-4" style="border-radius: 20px;">
                     <h5 class="text-muted small text-uppercase fw-bold mb-4">Journey Stats</h5>
-                    
                     <div class="row">
                         <div class="col-6 border-end">
                             <p class="text-muted mb-1">Time Elapsed</p>
@@ -65,12 +62,50 @@
                     </div>
 
                     <div class="mt-5">
-                        <form asp-action="ReturnVehicle" asp-controller="UserController" method="post">
+                        <button type="button" class="btn btn-danger btn-lg w-100 fw-bold py-3 shadow"
+                                style="border-radius: 15px;" onclick="handleReturn()">
+                            <i class="fa-solid fa-flag-checkered me-2"></i> Finish & Return Vehicle
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="paymentArea" class="d-none animate__animated animate__fadeIn">
+            <div class="card shadow-lg border-0 p-4" style="border-radius: 25px;">
+                <div class="text-center mb-4">
+                    <h3 class="fw-bold text-danger mb-1">TRẢ XE THÀNH CÔNG!</h3>
+                    <p class="text-muted small">Xem lại lộ trình và quét mã QR để hoàn tất thanh toán</p>
+                </div>
+
+                <div class="rounded-4 overflow-hidden border mb-4 shadow-sm" style="height: 300px;" id="map"></div>
+
+                <div class="text-center">
+                    <h2 class="display-5 fw-bold text-dark mb-4" id="finalPrice">0 VNĐ</h2>
+
+                    <div class="d-flex justify-content-center gap-4 mb-4">
+                        <button class="btn btn-outline-primary px-4 py-2 rounded-pill fw-bold d-flex align-items-center justify-content-center"
+                                onclick="showQR('vietqr')"
+                                style="width: 180px; height: 50px;">
+                            <img src="~/images/VietQR_Logo.png" height="22" alt="VietQR">
+                        </button>
+
+                        <button class="btn btn-outline-info px-4 py-2 rounded-pill fw-bold text-dark d-flex align-items-center justify-content-center"
+                                onclick="showQR('paypal')"
+                                style="width: 180px; height: 50px;">
+                            <img src="~/images/PayPal_Logo.png" width="70" alt="PayPal">
+                        </button>
+                    </div>
+
+                    <div id="qrDisplay" class="d-none animate__animated animate__zoomIn">
+                        <div class="bg-white p-3 d-inline-block rounded-4 border shadow-sm mb-4">
+                            <img id="qrImg" src="" style="width: 250px;" class="img-fluid" alt="Payment QR">
+                        </div>
+                        
+                        <form asp-action="ReturnVehicle" asp-controller="User" method="post">
                             <input type="hidden" name="historyId" value="@Model.Id" />
-                            <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold py-3 shadow"
-                                    style="border-radius: 15px;"
-                                    onclick="return confirm('Do you want to end your journey and return this vehicle?')">
-                                <i class="fa-solid fa-flag-checkered me-2"></i> Finish & Return Vehicle
+                            <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold py-3 rounded-pill shadow">
+                                XÁC NHẬN ĐÃ THANH TOÁN
                             </button>
                         </form>
                     </div>
@@ -80,7 +115,6 @@
     }
 </div>
 
-<!-- Modal Report Issue -->
 <div class="modal fade" id="reportModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <form action="/User/SendSupport" method="post" class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
@@ -92,10 +126,8 @@
                 <input type="hidden" name="VehicleId" value="@Model?.VehicleId" />
                 <div class="mb-3">
                     <label class="form-label fw-bold small text-uppercase">Describe the problem</label>
-                    <textarea name="Message" class="form-control border-2" rows="4"
-                              placeholder="e.g. Flat tire, GPS error, or station issues..." required></textarea>
+                    <textarea name="Message" class="form-control border-2" rows="4" placeholder="..." required></textarea>
                 </div>
-                <p class="small text-muted"><i class="fa-solid fa-info-circle me-1"></i> Admin will review and support you shortly.</p>
             </div>
             <div class="modal-footer border-0 p-4">
                 <button type="submit" class="btn btn-warning w-100 py-2 fw-bold" style="border-radius: 10px;">SEND REPORT</button>
@@ -107,48 +139,86 @@
 @if (Model != null)
 {
     <script>
+        let isFinished = false;
+        let finalCostString = "0";
+        let mapInitialized = false;
+
         document.addEventListener("DOMContentLoaded", function () {
-            const startTimeStr = "@Model.StartTime.ToString("yyyy-MM-ddTHH:mm:ss")";
-            const startTime = new Date(startTimeStr).getTime();
-            
-            // Đơn giá chuẩn theo đề bài của thầy Trung
-            const vehicleType = "@Model.Vehicle?.Type";
-            const ratePerMinute = (vehicleType === "E-Scooter") ? 1500 : 500;
+        const startTime = new Date("@Model.StartTime.ToString("yyyy-MM-ddTHH:mm:ss")").getTime();
+        const vehicleType = "@Model.Vehicle?.Type";
+        const ratePerMinute = (vehicleType === "E-Scooter") ? 1500 : 500;
 
-            function updateStats() {
-                const now = new Date().getTime();
-                const diff = now - startTime;
+        function updateStats() {
+        if (isFinished) return;
+        const now = new Date().getTime();
+        const diff = now - startTime;
+        if (isNaN(diff) || diff < 0) return;
 
-                if (isNaN(diff) || diff < 0) return;
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
 
-                // 1. Tính toán thời gian
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        document.getElementById("timer").innerHTML =
+        `${h < 10 ? '0' + h : h}:${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
 
-                const timerElement = document.getElementById("timer");
-                if (timerElement) {
-                    timerElement.innerHTML =
-                        (hours < 10 ? "0" + hours : hours) + ":" +
-                        (minutes < 10 ? "0" + minutes : minutes) + ":" +
-                        (seconds < 10 ? "0" + seconds : seconds);
-                }
-
-                // 2. Tính tiền theo phút + Giảm giá 15%
-                const costElement = document.getElementById("cost");
-                if (costElement) {
-                    const totalMinutes = diff / (1000 * 60);
-                    let basePrice = totalMinutes * ratePerMinute;
-                    let discountedPrice = basePrice * 0.85; // Location Discount 15%
-
-                    // Tính tối thiểu 1 phút đã giảm giá cho đúng logic
-                    let finalDisplay = Math.max(ratePerMinute * 0.85, discountedPrice);
-                    costElement.innerHTML = Math.round(finalDisplay).toLocaleString() + " VNĐ";
-                }
-            }
-
-            updateStats();
-            setInterval(updateStats, 1000);
+        const totalMinutes = Math.max(1, diff / 60000);
+        let finalPrice = (totalMinutes * ratePerMinute) * 0.85;
+        finalCostString = Math.round(finalPrice).toLocaleString() + " VNĐ";
+        document.getElementById("cost").innerHTML = finalCostString;
+        }
+        setInterval(updateStats, 1000);
         });
+
+        function handleReturn() {
+        if (confirm("Do you want to end your journey and return this vehicle?")) {
+        isFinished = true;
+        document.getElementById("mainJourneyArea").classList.add("d-none");
+        document.getElementById("paymentArea").classList.remove("d-none");
+        document.getElementById("finalPrice").innerText = finalCostString;
+                
+        if (!mapInitialized) {
+        setTimeout(initTrackingMap, 300);
+        mapInitialized = true;
+        }
+        }
+        }
+
+        function initTrackingMap() {
+        var startPoint = [10.7327, 106.6992];
+        var endPoint = [10.7626, 106.6602];
+        var map = L.map('map').setView(endPoint, 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        L.circleMarker(startPoint, { radius: 8, color: "#28a745", fillColor: "#28a745", fillOpacity: 1 }).addTo(map).bindPopup("Pickup Station");
+        L.marker(endPoint).addTo(map).bindPopup("<b>Return Point</b>").openPopup();
+
+        var route = L.polyline([startPoint, endPoint], { color: '#007bff', dashArray: '10, 10', opacity: 0.6 }).addTo(map);
+        map.fitBounds(route.getBounds(), { padding: [40, 40] });
+        }
+
+        function showQR(method) {
+        const qrDisplay = document.getElementById("qrDisplay");
+        const qrImg = document.getElementById("qrImg");
+        qrDisplay.classList.remove("d-none");
+
+        // Lấy số tiền thực tế (Xóa chữ VNĐ và dấu chấm)
+        const rawPrice = document.getElementById("finalPrice").innerText.replace(/[^0-9]/g, "");
+
+        if (method === 'vietqr') {
+        // Sử dụng API VietQR động
+        let baseUrl = "@Html.Raw(ViewBag.MomoQr)";
+        // Cập nhật số tiền và thêm tham số để ẩn thông tin thừa (tùy API VietQR.io)
+        qrImg.src = baseUrl.replace("amount=0", "amount=" + rawPrice);
+        } else {
+        qrImg.src = "@Html.Raw(ViewBag.PaypalQr)";
+        }
+            
+        setTimeout(() => {
+        qrDisplay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+        }
     </script>
 }
